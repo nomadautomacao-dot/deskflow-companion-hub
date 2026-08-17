@@ -52,6 +52,7 @@ set(GUI_SOURCE_FILES
     src/SetupWizard.cpp
     src/SslCertificate.cpp
     src/TrashScreenWidget.cpp
+    src/PeerDiscovery.cpp
     src/ZeroconfBrowser.cpp
     src/ZeroconfRegister.cpp
     src/ZeroconfServer.cpp
@@ -78,6 +79,7 @@ set(GUI_HEADER_FILES
     src/LogWindow.h
     src/MainWindow.h
     src/NewScreenWidget.h
+    src/PeerDiscovery.h
     src/ProcessorArch.h
     src/QInputLeapApplication.h
     src/QUtility.h

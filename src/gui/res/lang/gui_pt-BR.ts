@@ -1405,4 +1405,26 @@ Server response:
         <translation type="unfinished"></translation>
     </message>
 </context>
+<context>
+    <name>ScreenSettingsDialog</name>
+    <message>
+        <source>Mac Mode: Translate Shortcuts (Ctrl ↔ Cmd)</source>
+        <translation type="finished">Modo Mac: Traduzir Atalhos (Ctrl ↔ Cmd)</translation>
+    </message>
+    <message>
+        <source>Smooth HiDPI / Retina Mouse Scaling</source>
+        <translation type="finished">Normalização Suave de Mouse HiDPI / Retina</translation>
+    </message>
+</context>
+<context>
+    <name>MainWindow</name>
+    <message>
+        <source>Peer server discovered via UDP: %1 (%2:%3)</source>
+        <translation type="finished">Servidor par detectado via UDP: %1 (%2:%3)</translation>
+    </message>
+    <message>
+        <source>Peer client discovered via UDP: %1 (%2)</source>
+        <translation type="finished">Cliente par detectado via UDP: %1 (%2)</translation>
+    </message>
+</context>
 </TS>

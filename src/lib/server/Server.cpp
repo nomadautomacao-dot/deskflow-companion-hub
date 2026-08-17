@@ -94,6 +94,8 @@ Server::Server(
 	m_maximumClipboardSize(INT_MAX),
 	m_sendDragInfoThread(nullptr),
 	m_waitDragInfoThread(true),
+	m_macWindowsShortcutTranslation(false),
+	m_hiDpiScalingNormalization(true),
 	m_args(args)
 {
     input_filter_.add_rules(config.get_input_filter_rules());
@@ -1132,6 +1134,12 @@ Server::processOptions()
 				m_maximumClipboardSize = static_cast<size_t>(value);
 			}
 		}
+		else if (id == kOptionMacWindowsShortcutTranslation) {
+			m_macWindowsShortcutTranslation = (value != 0);
+		}
+		else if (id == kOptionHiDpiScalingNormalization) {
+			m_hiDpiScalingNormalization = (value != 0);
+		}
 	}
 	if (m_relativeMoves && !newRelativeMoves) {
 		stopRelativeMoves();
@@ -1557,9 +1565,16 @@ Server::onKeyDown(KeyID id, KeyModifierMask mask, KeyButton button,
 	LOG_DEBUG1("onKeyDown id=%d mask=0x%04x button=0x%04x", id, mask, button);
 	assert(m_active != nullptr);
 
+	KeyModifierMask effectiveMask = mask;
+	if (m_macWindowsShortcutTranslation && m_active != m_primaryClient) {
+		if (mask & KeyModifierControl) {
+			effectiveMask = (mask & ~KeyModifierControl) | KeyModifierSuper;
+		}
+	}
+
 	// relay
 	if (!m_keyboardBroadcasting && IKeyState::KeyInfo::isDefault(screens)) {
-		m_active->keyDown(id, mask, button);
+		m_active->keyDown(id, effectiveMask, button);
 	}
 	else {
 		if (!screens && m_keyboardBroadcasting) {
@@ -1570,7 +1585,7 @@ Server::onKeyDown(KeyID id, KeyModifierMask mask, KeyButton button,
 		}
         for (auto index = m_clients.begin(); index != m_clients.end(); ++index) {
 			if (IKeyState::KeyInfo::contains(screens, index->first)) {
-				index->second->keyDown(id, mask, button);
+				index->second->keyDown(id, effectiveMask, button);
 			}
 		}
 	}
@@ -1583,9 +1598,16 @@ Server::onKeyUp(KeyID id, KeyModifierMask mask, KeyButton button,
 	LOG_DEBUG1("onKeyUp id=%d mask=0x%04x button=0x%04x", id, mask, button);
 	assert(m_active != nullptr);
 
+	KeyModifierMask effectiveMask = mask;
+	if (m_macWindowsShortcutTranslation && m_active != m_primaryClient) {
+		if (mask & KeyModifierControl) {
+			effectiveMask = (mask & ~KeyModifierControl) | KeyModifierSuper;
+		}
+	}
+
 	// relay
 	if (!m_keyboardBroadcasting && IKeyState::KeyInfo::isDefault(screens)) {
-		m_active->keyUp(id, mask, button);
+		m_active->keyUp(id, effectiveMask, button);
 	}
 	else {
 		if (!screens && m_keyboardBroadcasting) {
@@ -1596,7 +1618,7 @@ Server::onKeyUp(KeyID id, KeyModifierMask mask, KeyButton button,
 		}
         for (auto index = m_clients.begin(); index != m_clients.end(); ++index) {
 			if (IKeyState::KeyInfo::contains(screens, index->first)) {
-				index->second->keyUp(id, mask, button);
+				index->second->keyUp(id, effectiveMask, button);
 			}
 		}
 	}
@@ -1607,8 +1629,15 @@ void Server::onKeyRepeat(KeyID id, KeyModifierMask mask, std::int32_t count, Key
 	LOG_DEBUG1("onKeyRepeat id=%d mask=0x%04x count=%d button=0x%04x", id, mask, count, button);
 	assert(m_active != nullptr);
 
+	KeyModifierMask effectiveMask = mask;
+	if (m_macWindowsShortcutTranslation && m_active != m_primaryClient) {
+		if (mask & KeyModifierControl) {
+			effectiveMask = (mask & ~KeyModifierControl) | KeyModifierSuper;
+		}
+	}
+
 	// relay
-	m_active->keyRepeat(id, mask, count, button);
+	m_active->keyRepeat(id, effectiveMask, count, button);
 }
 
 void

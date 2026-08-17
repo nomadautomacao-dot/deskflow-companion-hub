@@ -50,6 +50,8 @@ public:
         ScrollLock,
         XTest,
         PreserveFocus,
+        MacWindowsShortcutTranslation,
+        HiDpiScalingNormalization,
         Count
     };
 

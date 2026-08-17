@@ -472,7 +472,27 @@
           </property>
          </widget>
         </item>
-        <item row="5" column="0">
+	<item row="5" column="0">
+         <widget class="QCheckBox" name="m_pCheckBoxMacShortcut">
+          <property name="text">
+           <string>Mac Mode: Translate Shortcuts (Ctrl ↔ Cmd)</string>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+	<item row="6" column="0">
+         <widget class="QCheckBox" name="m_pCheckBoxHiDpi">
+          <property name="text">
+           <string>Smooth HiDPI / Retina Mouse Scaling</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="0">
          <spacer>
           <property name="orientation">
            <enum>Qt::Vertical</enum>

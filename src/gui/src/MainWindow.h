@@ -56,6 +56,7 @@ class LogDialog;
 class QInputLeapApplication;
 class SetupWizard;
 class ZeroconfService;
+class PeerDiscovery;
 class DataDownloader;
 class CommandProcess;
 class SslCertificate;
@@ -181,6 +182,7 @@ public slots:
         QMenu* main_menu_;
         QMenu* m_pMenuHelp;
         ZeroconfService* m_pZeroconfService;
+        PeerDiscovery* m_pPeerDiscovery;
         DataDownloader* m_pDataDownloader;
         QMessageBox* m_DownloadMessageBox;
         QAbstractButton* m_pCancelButton;
@@ -197,6 +199,8 @@ public slots:
         bool m_fingerprint_expanded = false;
 
 private slots:
+    void onPeerServerFound(const QString& name, const QString& address, quint16 port);
+    void onPeerClientFound(const QString& name, const QString& address);
     void on_m_pCheckBoxAutoConfig_toggled(bool checked);
     void comboServerList_currentIndexChanged(QString );
     void on_m_pButtonReload_clicked();

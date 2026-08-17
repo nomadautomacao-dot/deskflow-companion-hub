@@ -34,7 +34,9 @@ const char* BaseConfig::m_FixNames[] =
     "halfDuplexNumLock",
     "halfDuplexScrollLock",
     "xtestIsXineramaUnaware",
-    "preserveFocus"
+    "preserveFocus",
+    "macWindowsShortcutTranslation",
+    "hiDpiScalingNormalization"
 };
 
 const char* BaseConfig::m_SwitchCornerNames[] =

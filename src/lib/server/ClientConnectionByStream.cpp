@@ -54,42 +54,50 @@ void ClientConnectionByStream::send_leave_1_6()
 void ClientConnectionByStream::send_key_down_1_6(KeyID key, KeyModifierMask mask, KeyButton button)
 {
     ProtocolUtil::writef(stream_.get(), kMsgDKeyDown, key, mask, button);
+    stream_->flush();
 }
 
 void ClientConnectionByStream::send_key_up_1_6(KeyID key, KeyModifierMask mask, KeyButton button)
 {
     ProtocolUtil::writef(stream_.get(), kMsgDKeyUp, key, mask, button);
+    stream_->flush();
 }
 
 void ClientConnectionByStream::send_key_repeat_1_6(KeyID key, KeyModifierMask mask,
                                                    std::int32_t count, KeyButton button)
 {
     ProtocolUtil::writef(stream_.get(), kMsgDKeyRepeat, key, mask, count, button);
+    stream_->flush();
 }
 
 void ClientConnectionByStream::send_mouse_down_1_6(ButtonID button)
 {
     ProtocolUtil::writef(stream_.get(), kMsgDMouseDown, button);
+    stream_->flush();
 }
 
 void ClientConnectionByStream::send_mouse_up_1_6(ButtonID button)
 {
     ProtocolUtil::writef(stream_.get(), kMsgDMouseUp, button);
+    stream_->flush();
 }
 
 void ClientConnectionByStream::send_mouse_move_1_6(std::int32_t x_abs, std::int32_t y_abs)
 {
     ProtocolUtil::writef(stream_.get(), kMsgDMouseMove, x_abs, y_abs);
+    stream_->flush();
 }
 
 void ClientConnectionByStream::send_mouse_relative_move_1_6(std::int32_t x_rel, std::int32_t y_rel)
 {
     ProtocolUtil::writef(stream_.get(), kMsgDMouseRelMove, x_rel, y_rel);
+    stream_->flush();
 }
 
 void ClientConnectionByStream::send_mouse_wheel_1_6(std::int32_t x_delta, std::int32_t y_delta)
 {
     ProtocolUtil::writef(stream_.get(), kMsgDMouseWheel, x_delta, y_delta);
+    stream_->flush();
 }
 
 void ClientConnectionByStream::send_drag_info_1_6(std::uint32_t file_count, const std::string& data)

@@ -726,6 +726,12 @@ Config::readSectionOptions(ConfigReadContext& s)
 		else if (name == "clipboardSharingSize") {
 			addOption("", kOptionClipboardSharingSize, s.parseInt(value));
 		}
+		else if (name == "macWindowsShortcutTranslation") {
+			addOption("", kOptionMacWindowsShortcutTranslation, s.parseBoolean(value));
+		}
+		else if (name == "hiDpiScalingNormalization") {
+			addOption("", kOptionHiDpiScalingNormalization, s.parseBoolean(value));
+		}
 
 		else {
 			handled = false;
@@ -879,6 +885,14 @@ Config::readSectionScreens(ConfigReadContext& s)
 			}
 			else if (name == "preserveFocus") {
 				addOption(screen, kOptionScreenPreserveFocus,
+					s.parseBoolean(value));
+			}
+			else if (name == "macWindowsShortcutTranslation") {
+				addOption(screen, kOptionMacWindowsShortcutTranslation,
+					s.parseBoolean(value));
+			}
+			else if (name == "hiDpiScalingNormalization") {
+				addOption(screen, kOptionHiDpiScalingNormalization,
 					s.parseBoolean(value));
 			}
 			else {
@@ -1355,7 +1369,9 @@ std::string Config::getOptionValue(OptionID id, OptionValue value)
 		id == kOptionWin32KeepForeground ||
 		id == kOptionScreenPreserveFocus ||
 		id == kOptionClipboardSharing ||
-		id == kOptionClipboardSharingSize) {
+		id == kOptionClipboardSharingSize ||
+		id == kOptionMacWindowsShortcutTranslation ||
+		id == kOptionHiDpiScalingNormalization) {
 		return (value != 0) ? "true" : "false";
 	}
 	if (id == kOptionModifierMapForShift ||

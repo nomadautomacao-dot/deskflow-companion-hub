@@ -21,6 +21,7 @@
 #include "inputleap/Clipboard.h"
 #include "platform/OSXClipboardUTF16Converter.h"
 #include "platform/OSXClipboardTextConverter.h"
+#include "platform/OSXClipboardPNGConverter.h"
 #include "platform/OSXClipboardBMPConverter.h"
 #include "platform/OSXClipboardHTMLConverter.h"
 #include "base/Log.h"
@@ -33,6 +34,7 @@ OSXClipboard::OSXClipboard() :
     m_pboard(nullptr)
 {
     m_converters.push_back(new OSXClipboardHTMLConverter);
+    m_converters.push_back(new OSXClipboardPNGConverter);
     m_converters.push_back(new OSXClipboardBMPConverter);
     m_converters.push_back(new OSXClipboardUTF16Converter);
     m_converters.push_back(new OSXClipboardTextConverter);

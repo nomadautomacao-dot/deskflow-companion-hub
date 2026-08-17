@@ -25,6 +25,7 @@
 #include "ServerConfigDialog.h"
 #include "SettingsDialog.h"
 #include "ZeroconfService.h"
+#include "PeerDiscovery.h"
 #include "DataDownloader.h"
 #include "CommandProcess.h"
 #include "FingerprintAcceptDialog.h"
@@ -125,6 +126,7 @@ MainWindow::MainWindow(QSettings& settings, AppConfig& appConfig) :
     main_menu_(nullptr),
     m_pMenuHelp(nullptr),
     m_pZeroconfService(nullptr),
+    m_pPeerDiscovery(nullptr),
     m_pDataDownloader(nullptr),
     m_DownloadMessageBox(nullptr),
     m_pCancelButton(nullptr),
@@ -207,6 +209,7 @@ MainWindow::~MainWindow()
     saveSettings();
 
     delete m_pZeroconfService;
+    delete m_pPeerDiscovery;
     delete m_DownloadMessageBox;
     delete m_BonjourInstall;
     delete m_pSslCertificate;
@@ -1069,6 +1072,34 @@ void MainWindow::updateZeroconfService()
             }
         }
     }
+
+    // Also run PeerDiscovery (UDP broadcast) for zero-config discovery without Bonjour dependency
+    if (!m_AppConfig->wizardShouldRun()) {
+        if (!m_pPeerDiscovery) {
+            m_pPeerDiscovery = new PeerDiscovery(this);
+            connect(m_pPeerDiscovery, &PeerDiscovery::peerServerFound, this, &MainWindow::onPeerServerFound);
+            connect(m_pPeerDiscovery, &PeerDiscovery::peerClientFound, this, &MainWindow::onPeerClientFound);
+        }
+        m_pPeerDiscovery->startDiscovery(app_role() == AppRole::Server, m_AppConfig->screenName(), m_AppConfig->port());
+    }
+}
+
+void MainWindow::onPeerServerFound(const QString& name, const QString& address, quint16 port)
+{
+    appendLogInfo(tr("Peer server discovered via UDP: %1 (%2:%3)").arg(name, address).arg(port));
+    if (ui_->m_pComboServerList->findText(address) == -1) {
+        ui_->m_pComboServerList->addItem(address);
+    }
+    if (ui_->m_pComboServerList->count() > 1) {
+        ui_->m_pComboServerList->show();
+    }
+    serverDetected(name);
+}
+
+void MainWindow::onPeerClientFound(const QString& name, const QString& address)
+{
+    appendLogInfo(tr("Peer client discovered via UDP: %1 (%2)").arg(name, address));
+    autoAddScreen(name);
 }
 
 void MainWindow::serverDetected(const QString name)

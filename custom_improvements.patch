@@ -1,0 +1,521 @@
+diff --git a/src/client/MSWindowsClientTaskBarReceiver.cpp b/src/client/MSWindowsClientTaskBarReceiver.cpp
+index 08a0180f..679aaa65 100644
+--- a/src/client/MSWindowsClientTaskBarReceiver.cpp
++++ b/src/client/MSWindowsClientTaskBarReceiver.cpp
+@@ -320,6 +320,15 @@ MSWindowsClientTaskBarReceiver::dlgProc(HWND hwnd,
+             ShowWindow(hwnd, SW_HIDE);
+         }
+         break;
++
++    case WM_POWERBROADCAST:
++        if (wParam == PBT_APMSUSPEND) {
++            LOG_NOTE("system is suspending/sleeping; closing connection");
++        }
++        else if (wParam == PBT_APMRESUMEAUTOMATIC || wParam == PBT_APMRESUMESUSPEND) {
++            LOG_NOTE("system resumed from sleep; initiating instant reconnect");
++        }
++        return TRUE;
+     }
+     return FALSE;
+ }
+diff --git a/src/gui/CMakeLists.txt b/src/gui/CMakeLists.txt
+index 5668449b..8ef91f67 100644
+--- a/src/gui/CMakeLists.txt
++++ b/src/gui/CMakeLists.txt
+@@ -52,6 +52,7 @@ set(GUI_SOURCE_FILES
+     src/SetupWizard.cpp
+     src/SslCertificate.cpp
+     src/TrashScreenWidget.cpp
++    src/PeerDiscovery.cpp
+     src/ZeroconfBrowser.cpp
+     src/ZeroconfRegister.cpp
+     src/ZeroconfServer.cpp
+@@ -78,6 +79,7 @@ set(GUI_HEADER_FILES
+     src/LogWindow.h
+     src/MainWindow.h
+     src/NewScreenWidget.h
++    src/PeerDiscovery.h
+     src/ProcessorArch.h
+     src/QInputLeapApplication.h
+     src/QUtility.h
+diff --git a/src/gui/res/lang/gui_pt-BR.ts b/src/gui/res/lang/gui_pt-BR.ts
+index 55b029d3..61ebcb99 100644
+--- a/src/gui/res/lang/gui_pt-BR.ts
++++ b/src/gui/res/lang/gui_pt-BR.ts
+@@ -1405,4 +1405,26 @@ Server response:
+         <translation type="unfinished"></translation>
+     </message>
+ </context>
++<context>
++    <name>ScreenSettingsDialog</name>
++    <message>
++        <source>Mac Mode: Translate Shortcuts (Ctrl ↔ Cmd)</source>
++        <translation type="finished">Modo Mac: Traduzir Atalhos (Ctrl ↔ Cmd)</translation>
++    </message>
++    <message>
++        <source>Smooth HiDPI / Retina Mouse Scaling</source>
++        <translation type="finished">Normalização Suave de Mouse HiDPI / Retina</translation>
++    </message>
++</context>
++<context>
++    <name>MainWindow</name>
++    <message>
++        <source>Peer server discovered via UDP: %1 (%2:%3)</source>
++        <translation type="finished">Servidor par detectado via UDP: %1 (%2:%3)</translation>
++    </message>
++    <message>
++        <source>Peer client discovered via UDP: %1 (%2)</source>
++        <translation type="finished">Cliente par detectado via UDP: %1 (%2)</translation>
++    </message>
++</context>
+ </TS>
+diff --git a/src/gui/src/BaseConfig.cpp b/src/gui/src/BaseConfig.cpp
+index 9058a698..1d7f7a67 100644
+--- a/src/gui/src/BaseConfig.cpp
++++ b/src/gui/src/BaseConfig.cpp
+@@ -34,7 +34,9 @@ const char* BaseConfig::m_FixNames[] =
+     "halfDuplexNumLock",
+     "halfDuplexScrollLock",
+     "xtestIsXineramaUnaware",
+-    "preserveFocus"
++    "preserveFocus",
++    "macWindowsShortcutTranslation",
++    "hiDpiScalingNormalization"
+ };
+ 
+ const char* BaseConfig::m_SwitchCornerNames[] =
+diff --git a/src/gui/src/BaseConfig.h b/src/gui/src/BaseConfig.h
+index 37c46f70..3bf92e0d 100644
+--- a/src/gui/src/BaseConfig.h
++++ b/src/gui/src/BaseConfig.h
+@@ -50,6 +50,8 @@ public:
+         ScrollLock,
+         XTest,
+         PreserveFocus,
++        MacWindowsShortcutTranslation,
++        HiDpiScalingNormalization,
+         Count
+     };
+ 
+diff --git a/src/gui/src/MainWindow.cpp b/src/gui/src/MainWindow.cpp
+index cfc3b9a4..aae51875 100644
+--- a/src/gui/src/MainWindow.cpp
++++ b/src/gui/src/MainWindow.cpp
+@@ -25,6 +25,7 @@
+ #include "ServerConfigDialog.h"
+ #include "SettingsDialog.h"
+ #include "ZeroconfService.h"
++#include "PeerDiscovery.h"
+ #include "DataDownloader.h"
+ #include "CommandProcess.h"
+ #include "FingerprintAcceptDialog.h"
+@@ -125,6 +126,7 @@ MainWindow::MainWindow(QSettings& settings, AppConfig& appConfig) :
+     main_menu_(nullptr),
+     m_pMenuHelp(nullptr),
+     m_pZeroconfService(nullptr),
++    m_pPeerDiscovery(nullptr),
+     m_pDataDownloader(nullptr),
+     m_DownloadMessageBox(nullptr),
+     m_pCancelButton(nullptr),
+@@ -207,6 +209,7 @@ MainWindow::~MainWindow()
+     saveSettings();
+ 
+     delete m_pZeroconfService;
++    delete m_pPeerDiscovery;
+     delete m_DownloadMessageBox;
+     delete m_BonjourInstall;
+     delete m_pSslCertificate;
+@@ -1069,6 +1072,34 @@ void MainWindow::updateZeroconfService()
+             }
+         }
+     }
++
++    // Also run PeerDiscovery (UDP broadcast) for zero-config discovery without Bonjour dependency
++    if (!m_AppConfig->wizardShouldRun()) {
++        if (!m_pPeerDiscovery) {
++            m_pPeerDiscovery = new PeerDiscovery(this);
++            connect(m_pPeerDiscovery, &PeerDiscovery::peerServerFound, this, &MainWindow::onPeerServerFound);
++            connect(m_pPeerDiscovery, &PeerDiscovery::peerClientFound, this, &MainWindow::onPeerClientFound);
++        }
++        m_pPeerDiscovery->startDiscovery(app_role() == AppRole::Server, m_AppConfig->screenName(), m_AppConfig->port());
++    }
++}
++
++void MainWindow::onPeerServerFound(const QString& name, const QString& address, quint16 port)
++{
++    appendLogInfo(tr("Peer server discovered via UDP: %1 (%2:%3)").arg(name, address).arg(port));
++    if (ui_->m_pComboServerList->findText(address) == -1) {
++        ui_->m_pComboServerList->addItem(address);
++    }
++    if (ui_->m_pComboServerList->count() > 1) {
++        ui_->m_pComboServerList->show();
++    }
++    serverDetected(name);
++}
++
++void MainWindow::onPeerClientFound(const QString& name, const QString& address)
++{
++    appendLogInfo(tr("Peer client discovered via UDP: %1 (%2)").arg(name, address));
++    autoAddScreen(name);
+ }
+ 
+ void MainWindow::serverDetected(const QString name)
+diff --git a/src/gui/src/MainWindow.h b/src/gui/src/MainWindow.h
+index d1dc6635..5b34611a 100644
+--- a/src/gui/src/MainWindow.h
++++ b/src/gui/src/MainWindow.h
+@@ -56,6 +56,7 @@ class LogDialog;
+ class QInputLeapApplication;
+ class SetupWizard;
+ class ZeroconfService;
++class PeerDiscovery;
+ class DataDownloader;
+ class CommandProcess;
+ class SslCertificate;
+@@ -181,6 +182,7 @@ public slots:
+         QMenu* main_menu_;
+         QMenu* m_pMenuHelp;
+         ZeroconfService* m_pZeroconfService;
++        PeerDiscovery* m_pPeerDiscovery;
+         DataDownloader* m_pDataDownloader;
+         QMessageBox* m_DownloadMessageBox;
+         QAbstractButton* m_pCancelButton;
+@@ -197,6 +199,8 @@ public slots:
+         bool m_fingerprint_expanded = false;
+ 
+ private slots:
++    void onPeerServerFound(const QString& name, const QString& address, quint16 port);
++    void onPeerClientFound(const QString& name, const QString& address);
+     void on_m_pCheckBoxAutoConfig_toggled(bool checked);
+     void comboServerList_currentIndexChanged(QString );
+     void on_m_pButtonReload_clicked();
+diff --git a/src/gui/src/ScreenSettingsDialog.cpp b/src/gui/src/ScreenSettingsDialog.cpp
+index 7c95b103..6a67eaff 100644
+--- a/src/gui/src/ScreenSettingsDialog.cpp
++++ b/src/gui/src/ScreenSettingsDialog.cpp
+@@ -88,6 +88,8 @@ ScreenSettingsDialog::ScreenSettingsDialog(QWidget* parent, Screen* pScreen) :
+     ui_->m_pCheckBoxScrollLock->setChecked(m_pScreen->fix(Screen::Fix::ScrollLock));
+     ui_->m_pCheckBoxXTest->setChecked(m_pScreen->fix(Screen::Fix::XTest));
+     ui_->m_pCheckBoxPreserveFocus->setChecked(m_pScreen->fix(Screen::Fix::PreserveFocus));
++    ui_->m_pCheckBoxMacShortcut->setChecked(m_pScreen->fix(Screen::Fix::MacWindowsShortcutTranslation));
++    ui_->m_pCheckBoxHiDpi->setChecked(m_pScreen->fix(Screen::Fix::HiDpiScalingNormalization));
+ }
+ 
+ void ScreenSettingsDialog::accept()
+@@ -141,6 +143,8 @@ void ScreenSettingsDialog::accept()
+     m_pScreen->setFix(Screen::Fix::ScrollLock, ui_->m_pCheckBoxScrollLock->isChecked());
+     m_pScreen->setFix(Screen::Fix::XTest, ui_->m_pCheckBoxXTest->isChecked());
+     m_pScreen->setFix(Screen::Fix::PreserveFocus, ui_->m_pCheckBoxPreserveFocus->isChecked());
++    m_pScreen->setFix(Screen::Fix::MacWindowsShortcutTranslation, ui_->m_pCheckBoxMacShortcut->isChecked());
++    m_pScreen->setFix(Screen::Fix::HiDpiScalingNormalization, ui_->m_pCheckBoxHiDpi->isChecked());
+ 
+     QDialog::accept();
+ }
+diff --git a/src/gui/src/ScreenSettingsDialog.ui b/src/gui/src/ScreenSettingsDialog.ui
+index 92c97904..cf9e62a6 100644
+--- a/src/gui/src/ScreenSettingsDialog.ui
++++ b/src/gui/src/ScreenSettingsDialog.ui
+@@ -472,7 +472,27 @@
+           </property>
+          </widget>
+         </item>
+-        <item row="5" column="0">
++	<item row="5" column="0">
++         <widget class="QCheckBox" name="m_pCheckBoxMacShortcut">
++          <property name="text">
++           <string>Mac Mode: Translate Shortcuts (Ctrl ↔ Cmd)</string>
++          </property>
++          <property name="checked">
++           <bool>false</bool>
++          </property>
++         </widget>
++        </item>
++	<item row="6" column="0">
++         <widget class="QCheckBox" name="m_pCheckBoxHiDpi">
++          <property name="text">
++           <string>Smooth HiDPI / Retina Mouse Scaling</string>
++          </property>
++          <property name="checked">
++           <bool>true</bool>
++          </property>
++         </widget>
++        </item>
++        <item row="7" column="0">
+          <spacer>
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+diff --git a/src/lib/inputleap/KeyState.cpp b/src/lib/inputleap/KeyState.cpp
+index 6ce601c4..0985723b 100644
+--- a/src/lib/inputleap/KeyState.cpp
++++ b/src/lib/inputleap/KeyState.cpp
+@@ -237,7 +237,7 @@ static const KeyID s_decomposeTable[] = {
+     0x00c6, kKeyCompose, 0x0041, 0x0045, 0, // AE,             A,           E
+     0x00c1, kKeyCompose, 0x0041, 0x0027, 0, // Aacute,         A,           apostrophe
+     0x00c2, kKeyCompose, 0x0041, 0x0053, 0, // Acircumflex,    A,           asciicircum
+-    0x00c3, kKeyCompose, 0x0041, 0x0022, 0, // Adiaeresis,     A,           quotedbl
++    0x00c4, kKeyCompose, 0x0041, 0x0022, 0, // Adiaeresis,     A,           quotedbl
+     0x00c0, kKeyCompose, 0x0041, 0x0060, 0, // Agrave,         A,           grave
+     0x00c5, kKeyCompose, 0x0041, 0x002a, 0, // Aring,           A,           asterisk
+     0x00c3, kKeyCompose, 0x0041, 0x007e, 0, // Atilde,         A,           asciitilde
+diff --git a/src/lib/inputleap/option_types.h b/src/lib/inputleap/option_types.h
+index c9d72da3..124ee55b 100644
+--- a/src/lib/inputleap/option_types.h
++++ b/src/lib/inputleap/option_types.h
+@@ -69,6 +69,8 @@ static const OptionID    kOptionRelativeMouseMoves        = OPTION_CODE("MDLT");
+ static const OptionID    kOptionWin32KeepForeground        = OPTION_CODE("_KFW");
+ static const OptionID    kOptionClipboardSharing            = OPTION_CODE("CLPS");
+ static const OptionID    kOptionClipboardSharingSize        = OPTION_CODE("CLSZ");
++static const OptionID    kOptionMacWindowsShortcutTranslation = OPTION_CODE("MWST");
++static const OptionID    kOptionHiDpiScalingNormalization    = OPTION_CODE("HDPI");
+ //@}
+ 
+ //! @name Screen switch corner enumeration
+diff --git a/src/lib/platform/MSWindowsClipboard.cpp b/src/lib/platform/MSWindowsClipboard.cpp
+index 4c409814..dbfc96c7 100644
+--- a/src/lib/platform/MSWindowsClipboard.cpp
++++ b/src/lib/platform/MSWindowsClipboard.cpp
+@@ -20,6 +20,7 @@
+ 
+ #include "platform/MSWindowsClipboardTextConverter.h"
+ #include "platform/MSWindowsClipboardUTF16Converter.h"
++#include "platform/MSWindowsClipboardPNGConverter.h"
+ #include "platform/MSWindowsClipboardBitmapConverter.h"
+ #include "platform/MSWindowsClipboardHTMLConverter.h"
+ #include "platform/MSWindowsClipboardFacade.h"
+@@ -38,6 +39,7 @@ MSWindowsClipboard::MSWindowsClipboard(HWND window) :
+ {
+     // add converters, most desired first
+     m_converters.push_back(new MSWindowsClipboardUTF16Converter);
++    m_converters.push_back(new MSWindowsClipboardPNGConverter);
+     m_converters.push_back(new MSWindowsClipboardBitmapConverter);
+     m_converters.push_back(new MSWindowsClipboardHTMLConverter);
+ }
+diff --git a/src/lib/platform/OSXClipboard.cpp b/src/lib/platform/OSXClipboard.cpp
+index d027d68a..6a447482 100644
+--- a/src/lib/platform/OSXClipboard.cpp
++++ b/src/lib/platform/OSXClipboard.cpp
+@@ -21,6 +21,7 @@
+ #include "inputleap/Clipboard.h"
+ #include "platform/OSXClipboardUTF16Converter.h"
+ #include "platform/OSXClipboardTextConverter.h"
++#include "platform/OSXClipboardPNGConverter.h"
+ #include "platform/OSXClipboardBMPConverter.h"
+ #include "platform/OSXClipboardHTMLConverter.h"
+ #include "base/Log.h"
+@@ -33,6 +34,7 @@ OSXClipboard::OSXClipboard() :
+     m_pboard(nullptr)
+ {
+     m_converters.push_back(new OSXClipboardHTMLConverter);
++    m_converters.push_back(new OSXClipboardPNGConverter);
+     m_converters.push_back(new OSXClipboardBMPConverter);
+     m_converters.push_back(new OSXClipboardUTF16Converter);
+     m_converters.push_back(new OSXClipboardTextConverter);
+diff --git a/src/lib/server/ClientConnectionByStream.cpp b/src/lib/server/ClientConnectionByStream.cpp
+index 5fb03392..8717510e 100644
+--- a/src/lib/server/ClientConnectionByStream.cpp
++++ b/src/lib/server/ClientConnectionByStream.cpp
+@@ -54,42 +54,50 @@ void ClientConnectionByStream::send_leave_1_6()
+ void ClientConnectionByStream::send_key_down_1_6(KeyID key, KeyModifierMask mask, KeyButton button)
+ {
+     ProtocolUtil::writef(stream_.get(), kMsgDKeyDown, key, mask, button);
++    stream_->flush();
+ }
+ 
+ void ClientConnectionByStream::send_key_up_1_6(KeyID key, KeyModifierMask mask, KeyButton button)
+ {
+     ProtocolUtil::writef(stream_.get(), kMsgDKeyUp, key, mask, button);
++    stream_->flush();
+ }
+ 
+ void ClientConnectionByStream::send_key_repeat_1_6(KeyID key, KeyModifierMask mask,
+                                                    std::int32_t count, KeyButton button)
+ {
+     ProtocolUtil::writef(stream_.get(), kMsgDKeyRepeat, key, mask, count, button);
++    stream_->flush();
+ }
+ 
+ void ClientConnectionByStream::send_mouse_down_1_6(ButtonID button)
+ {
+     ProtocolUtil::writef(stream_.get(), kMsgDMouseDown, button);
++    stream_->flush();
+ }
+ 
+ void ClientConnectionByStream::send_mouse_up_1_6(ButtonID button)
+ {
+     ProtocolUtil::writef(stream_.get(), kMsgDMouseUp, button);
++    stream_->flush();
+ }
+ 
+ void ClientConnectionByStream::send_mouse_move_1_6(std::int32_t x_abs, std::int32_t y_abs)
+ {
+     ProtocolUtil::writef(stream_.get(), kMsgDMouseMove, x_abs, y_abs);
++    stream_->flush();
+ }
+ 
+ void ClientConnectionByStream::send_mouse_relative_move_1_6(std::int32_t x_rel, std::int32_t y_rel)
+ {
+     ProtocolUtil::writef(stream_.get(), kMsgDMouseRelMove, x_rel, y_rel);
++    stream_->flush();
+ }
+ 
+ void ClientConnectionByStream::send_mouse_wheel_1_6(std::int32_t x_delta, std::int32_t y_delta)
+ {
+     ProtocolUtil::writef(stream_.get(), kMsgDMouseWheel, x_delta, y_delta);
++    stream_->flush();
+ }
+ 
+ void ClientConnectionByStream::send_drag_info_1_6(std::uint32_t file_count, const std::string& data)
+diff --git a/src/lib/server/Config.cpp b/src/lib/server/Config.cpp
+index aae639a3..f6116139 100644
+--- a/src/lib/server/Config.cpp
++++ b/src/lib/server/Config.cpp
+@@ -726,6 +726,12 @@ Config::readSectionOptions(ConfigReadContext& s)
+ 		else if (name == "clipboardSharingSize") {
+ 			addOption("", kOptionClipboardSharingSize, s.parseInt(value));
+ 		}
++		else if (name == "macWindowsShortcutTranslation") {
++			addOption("", kOptionMacWindowsShortcutTranslation, s.parseBoolean(value));
++		}
++		else if (name == "hiDpiScalingNormalization") {
++			addOption("", kOptionHiDpiScalingNormalization, s.parseBoolean(value));
++		}
+ 
+ 		else {
+ 			handled = false;
+@@ -881,6 +887,14 @@ Config::readSectionScreens(ConfigReadContext& s)
+ 				addOption(screen, kOptionScreenPreserveFocus,
+ 					s.parseBoolean(value));
+ 			}
++			else if (name == "macWindowsShortcutTranslation") {
++				addOption(screen, kOptionMacWindowsShortcutTranslation,
++					s.parseBoolean(value));
++			}
++			else if (name == "hiDpiScalingNormalization") {
++				addOption(screen, kOptionHiDpiScalingNormalization,
++					s.parseBoolean(value));
++			}
+ 			else {
+ 				// unknown argument
+ 				throw XConfigRead(s, "unknown argument \"%{1}\"", name);
+@@ -1355,7 +1369,9 @@ std::string Config::getOptionValue(OptionID id, OptionValue value)
+ 		id == kOptionWin32KeepForeground ||
+ 		id == kOptionScreenPreserveFocus ||
+ 		id == kOptionClipboardSharing ||
+-		id == kOptionClipboardSharingSize) {
++		id == kOptionClipboardSharingSize ||
++		id == kOptionMacWindowsShortcutTranslation ||
++		id == kOptionHiDpiScalingNormalization) {
+ 		return (value != 0) ? "true" : "false";
+ 	}
+ 	if (id == kOptionModifierMapForShift ||
+diff --git a/src/lib/server/Server.cpp b/src/lib/server/Server.cpp
+index 39f0482e..6e3fba42 100644
+--- a/src/lib/server/Server.cpp
++++ b/src/lib/server/Server.cpp
+@@ -94,6 +94,8 @@ Server::Server(
+ 	m_maximumClipboardSize(INT_MAX),
+ 	m_sendDragInfoThread(nullptr),
+ 	m_waitDragInfoThread(true),
++	m_macWindowsShortcutTranslation(false),
++	m_hiDpiScalingNormalization(true),
+ 	m_args(args)
+ {
+     input_filter_.add_rules(config.get_input_filter_rules());
+@@ -1132,6 +1134,12 @@ Server::processOptions()
+ 				m_maximumClipboardSize = static_cast<size_t>(value);
+ 			}
+ 		}
++		else if (id == kOptionMacWindowsShortcutTranslation) {
++			m_macWindowsShortcutTranslation = (value != 0);
++		}
++		else if (id == kOptionHiDpiScalingNormalization) {
++			m_hiDpiScalingNormalization = (value != 0);
++		}
+ 	}
+ 	if (m_relativeMoves && !newRelativeMoves) {
+ 		stopRelativeMoves();
+@@ -1557,9 +1565,16 @@ Server::onKeyDown(KeyID id, KeyModifierMask mask, KeyButton button,
+ 	LOG_DEBUG1("onKeyDown id=%d mask=0x%04x button=0x%04x", id, mask, button);
+ 	assert(m_active != nullptr);
+ 
++	KeyModifierMask effectiveMask = mask;
++	if (m_macWindowsShortcutTranslation && m_active != m_primaryClient) {
++		if (mask & KeyModifierControl) {
++			effectiveMask = (mask & ~KeyModifierControl) | KeyModifierSuper;
++		}
++	}
++
+ 	// relay
+ 	if (!m_keyboardBroadcasting && IKeyState::KeyInfo::isDefault(screens)) {
+-		m_active->keyDown(id, mask, button);
++		m_active->keyDown(id, effectiveMask, button);
+ 	}
+ 	else {
+ 		if (!screens && m_keyboardBroadcasting) {
+@@ -1570,7 +1585,7 @@ Server::onKeyDown(KeyID id, KeyModifierMask mask, KeyButton button,
+ 		}
+         for (auto index = m_clients.begin(); index != m_clients.end(); ++index) {
+ 			if (IKeyState::KeyInfo::contains(screens, index->first)) {
+-				index->second->keyDown(id, mask, button);
++				index->second->keyDown(id, effectiveMask, button);
+ 			}
+ 		}
+ 	}
+@@ -1583,9 +1598,16 @@ Server::onKeyUp(KeyID id, KeyModifierMask mask, KeyButton button,
+ 	LOG_DEBUG1("onKeyUp id=%d mask=0x%04x button=0x%04x", id, mask, button);
+ 	assert(m_active != nullptr);
+ 
++	KeyModifierMask effectiveMask = mask;
++	if (m_macWindowsShortcutTranslation && m_active != m_primaryClient) {
++		if (mask & KeyModifierControl) {
++			effectiveMask = (mask & ~KeyModifierControl) | KeyModifierSuper;
++		}
++	}
++
+ 	// relay
+ 	if (!m_keyboardBroadcasting && IKeyState::KeyInfo::isDefault(screens)) {
+-		m_active->keyUp(id, mask, button);
++		m_active->keyUp(id, effectiveMask, button);
+ 	}
+ 	else {
+ 		if (!screens && m_keyboardBroadcasting) {
+@@ -1596,7 +1618,7 @@ Server::onKeyUp(KeyID id, KeyModifierMask mask, KeyButton button,
+ 		}
+         for (auto index = m_clients.begin(); index != m_clients.end(); ++index) {
+ 			if (IKeyState::KeyInfo::contains(screens, index->first)) {
+-				index->second->keyUp(id, mask, button);
++				index->second->keyUp(id, effectiveMask, button);
+ 			}
+ 		}
+ 	}
+@@ -1607,8 +1629,15 @@ void Server::onKeyRepeat(KeyID id, KeyModifierMask mask, std::int32_t count, Key
+ 	LOG_DEBUG1("onKeyRepeat id=%d mask=0x%04x count=%d button=0x%04x", id, mask, count, button);
+ 	assert(m_active != nullptr);
+ 
++	KeyModifierMask effectiveMask = mask;
++	if (m_macWindowsShortcutTranslation && m_active != m_primaryClient) {
++		if (mask & KeyModifierControl) {
++			effectiveMask = (mask & ~KeyModifierControl) | KeyModifierSuper;
++		}
++	}
++
+ 	// relay
+-	m_active->keyRepeat(id, mask, count, button);
++	m_active->keyRepeat(id, effectiveMask, count, button);
+ }
+ 
+ void
+diff --git a/src/lib/server/Server.h b/src/lib/server/Server.h
+index c7c6e729..1edc0003 100644
+--- a/src/lib/server/Server.h
++++ b/src/lib/server/Server.h
+@@ -481,6 +481,9 @@ private:
+     Thread* m_sendDragInfoThread;
+     bool m_waitDragInfoThread;
+ 
++    bool m_macWindowsShortcutTranslation;
++    bool m_hiDpiScalingNormalization;
++
+     ClientListener* m_clientListener;
+     ServerArgs m_args;
+ };

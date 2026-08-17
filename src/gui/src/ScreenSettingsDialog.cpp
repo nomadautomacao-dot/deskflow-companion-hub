@@ -88,6 +88,8 @@ ScreenSettingsDialog::ScreenSettingsDialog(QWidget* parent, Screen* pScreen) :
     ui_->m_pCheckBoxScrollLock->setChecked(m_pScreen->fix(Screen::Fix::ScrollLock));
     ui_->m_pCheckBoxXTest->setChecked(m_pScreen->fix(Screen::Fix::XTest));
     ui_->m_pCheckBoxPreserveFocus->setChecked(m_pScreen->fix(Screen::Fix::PreserveFocus));
+    ui_->m_pCheckBoxMacShortcut->setChecked(m_pScreen->fix(Screen::Fix::MacWindowsShortcutTranslation));
+    ui_->m_pCheckBoxHiDpi->setChecked(m_pScreen->fix(Screen::Fix::HiDpiScalingNormalization));
 }
 
 void ScreenSettingsDialog::accept()
@@ -141,6 +143,8 @@ void ScreenSettingsDialog::accept()
     m_pScreen->setFix(Screen::Fix::ScrollLock, ui_->m_pCheckBoxScrollLock->isChecked());
     m_pScreen->setFix(Screen::Fix::XTest, ui_->m_pCheckBoxXTest->isChecked());
     m_pScreen->setFix(Screen::Fix::PreserveFocus, ui_->m_pCheckBoxPreserveFocus->isChecked());
+    m_pScreen->setFix(Screen::Fix::MacWindowsShortcutTranslation, ui_->m_pCheckBoxMacShortcut->isChecked());
+    m_pScreen->setFix(Screen::Fix::HiDpiScalingNormalization, ui_->m_pCheckBoxHiDpi->isChecked());
 
     QDialog::accept();
 }

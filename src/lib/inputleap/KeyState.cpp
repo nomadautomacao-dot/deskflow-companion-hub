@@ -237,7 +237,7 @@ static const KeyID s_decomposeTable[] = {
     0x00c6, kKeyCompose, 0x0041, 0x0045, 0, // AE,             A,           E
     0x00c1, kKeyCompose, 0x0041, 0x0027, 0, // Aacute,         A,           apostrophe
     0x00c2, kKeyCompose, 0x0041, 0x0053, 0, // Acircumflex,    A,           asciicircum
-    0x00c3, kKeyCompose, 0x0041, 0x0022, 0, // Adiaeresis,     A,           quotedbl
+    0x00c4, kKeyCompose, 0x0041, 0x0022, 0, // Adiaeresis,     A,           quotedbl
     0x00c0, kKeyCompose, 0x0041, 0x0060, 0, // Agrave,         A,           grave
     0x00c5, kKeyCompose, 0x0041, 0x002a, 0, // Aring,           A,           asterisk
     0x00c3, kKeyCompose, 0x0041, 0x007e, 0, // Atilde,         A,           asciitilde

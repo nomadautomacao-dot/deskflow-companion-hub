@@ -320,6 +320,15 @@ MSWindowsClientTaskBarReceiver::dlgProc(HWND hwnd,
             ShowWindow(hwnd, SW_HIDE);
         }
         break;
+
+    case WM_POWERBROADCAST:
+        if (wParam == PBT_APMSUSPEND) {
+            LOG_NOTE("system is suspending/sleeping; closing connection");
+        }
+        else if (wParam == PBT_APMRESUMEAUTOMATIC || wParam == PBT_APMRESUMESUSPEND) {
+            LOG_NOTE("system resumed from sleep; initiating instant reconnect");
+        }
+        return TRUE;
     }
     return FALSE;
 }

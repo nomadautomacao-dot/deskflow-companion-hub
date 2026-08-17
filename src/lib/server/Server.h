@@ -481,6 +481,9 @@ private:
     Thread* m_sendDragInfoThread;
     bool m_waitDragInfoThread;
 
+    bool m_macWindowsShortcutTranslation;
+    bool m_hiDpiScalingNormalization;
+
     ClientListener* m_clientListener;
     ServerArgs m_args;
 };
