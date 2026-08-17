@@ -24,7 +24,7 @@ echo Servidor em execucao! Aguardando o Mac conectar...
 echo (Mantenha esta janela aberta enquanto estiver usando)
 echo ========================================================
 echo.
-"%~dp0build\bin\Release\input-leaps.exe" -f --config "%~dp0inputleap.conf" --address 0.0.0.0:24800 --disable-crypto --debug INFO
+"%~dp0build\bin\Release\input-leaps.exe" -f --no-tray --config "%~dp0inputleap.conf" --address 0.0.0.0:24800 --disable-client-cert-checking --debug INFO --name Adriel-Tavares
 if errorlevel 1 (
     echo.
     echo O servidor foi encerrado.
