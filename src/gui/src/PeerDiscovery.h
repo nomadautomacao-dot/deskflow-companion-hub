@@ -9,11 +9,11 @@
 
 #pragma once
 
-#include <QtCore/QObject>
-#include <QtCore/QTimer>
-#include <QtCore/QString>
-#include <QtCore/QHostAddress>
-#include <QtNetwork/QUdpSocket>
+#include <QObject>
+#include <QTimer>
+#include <QString>
+#include <QHostAddress>
+#include <QUdpSocket>
 
 class PeerDiscovery : public QObject {
     Q_OBJECT

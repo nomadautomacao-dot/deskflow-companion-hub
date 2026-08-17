@@ -195,9 +195,9 @@ void generate_pem_self_signed_cert(const std::string& path)
     X509_set_pubkey(cert, private_key);
 
     auto* name = X509_get_subject_name(cert);
-    X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC,
+    X509_NAME_add_entry_by_txt(const_cast<X509_NAME*>(name), "CN", MBSTRING_ASC,
                                reinterpret_cast<const unsigned char *>("InputLeap"), -1, -1, 0);
-    X509_set_issuer_name(cert, name);
+    X509_set_issuer_name(cert, const_cast<X509_NAME*>(name));
 
     X509_sign(cert, private_key, EVP_sha256());
 
