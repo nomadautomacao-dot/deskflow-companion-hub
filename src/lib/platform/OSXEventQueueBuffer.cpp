@@ -99,10 +99,18 @@ bool OSXEventQueueBuffer::addEvent(std::uint32_t dataID)
 
     if (error == noErr) {
 
-        assert(m_carbonEventQueue != nullptr);
+        // addEvent can be called from network threads or signal handlers
+        // before init() has run on the event-loop thread (first connect,
+        // reconnect, or early termination). In that window
+        // m_carbonEventQueue is still null and PostEventToQueue would
+        // crash; fall back to the main queue instead of dereferencing it.
+        EventQueueRef queue = m_carbonEventQueue;
+        if (queue == nullptr) {
+            queue = GetMainEventQueue();
+        }
 
         error = PostEventToQueue(
-            m_carbonEventQueue,
+            queue,
             event,
             kEventPriorityStandard);
 

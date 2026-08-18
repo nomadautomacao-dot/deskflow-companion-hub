@@ -23,6 +23,7 @@
 #include "client/Client.h"
 #include "platform/OSXClipboard.h"
 #include "platform/OSXEventQueueBuffer.h"
+#include "base/SimpleEventQueueBuffer.h"
 #include "platform/OSXKeyState.h"
 #include "platform/OSXScreenSaver.h"
 #include "platform/OSXDragSimulator.h"
@@ -165,7 +166,12 @@ OSXScreen::OSXScreen(IEventQueue* events, bool isPrimary, bool autoShowHideCurso
                           [this](const auto& e){ handle_system_event(e); });
 
 	// install the platform event queue
-    m_events->set_buffer(std::make_unique<OSXEventQueueBuffer>(m_events));
+    // Since the 10.7+ threading split, the events loop runs on a secondary
+    // thread while Carbon/Cocoa loops run elsewhere, so the Carbon queue in
+    // OSXEventQueueBuffer is only used as a cross-thread wake-up. Posting to
+    // a non-main-thread Carbon queue crashes inside HIToolbox on modern
+    // macOS, so use the portable thread-safe buffer instead.
+    m_events->set_buffer(std::make_unique<SimpleEventQueueBuffer>());
 }
 
 OSXScreen::~OSXScreen()
