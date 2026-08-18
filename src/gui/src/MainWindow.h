@@ -150,7 +150,6 @@ public slots:
         void stopService();
         void stopDesktop();
         void changeEvent(QEvent* event) override;
-        bool event(QEvent* event) override;
         void retranslateMenuBar();
         void refreshLayoutPreview();
 #if defined(Q_OS_WIN)

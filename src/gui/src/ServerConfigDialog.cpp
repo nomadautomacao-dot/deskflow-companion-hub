@@ -26,6 +26,9 @@
 #include <QtCore>
 #include <QtGui>
 #include <QMessageBox>
+#include <QScrollArea>
+#include <QScreen>
+#include <QVBoxLayout>
 
 ServerConfigDialog::ServerConfigDialog(QWidget* parent, ServerConfig& config, const QString& defaultScreenName) :
     QDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint),
@@ -36,6 +39,31 @@ ServerConfigDialog::ServerConfigDialog(QWidget* parent, ServerConfig& config, co
     m_Message("")
 {
     ui_->setupUi(this);
+
+    setWindowFlags(windowFlags() | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
+    setSizeGripEnabled(true);
+    if (auto* lay = qobject_cast<QVBoxLayout*>(layout())) {
+        lay->setStretch(0, 1);
+    }
+    ui_->m_pButtonBox->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+
+    if (auto* advLayout = ui_->m_pTabAdvanced->layout()) {
+        auto* inner = new QWidget;
+        inner->setLayout(advLayout);
+        auto* advScroll = new QScrollArea(ui_->m_pTabAdvanced);
+        advScroll->setWidgetResizable(true);
+        advScroll->setFrameShape(QFrame::NoFrame);
+        advScroll->setWidget(inner);
+        auto* wrap = new QVBoxLayout(ui_->m_pTabAdvanced);
+        wrap->setContentsMargins(0, 0, 0, 0);
+        wrap->addWidget(advScroll);
+    }
+
+    const QRect avail = screen() ? screen()->availableGeometry()
+                                 : QRect(0, 0, 1280, 720);
+    setMinimumSize(640, 420);
+    setMaximumSize(qMax(640, avail.width() - 24), qMax(420, avail.height() - 48));
+    resize(qMin(860, avail.width() - 40), qMin(620, avail.height() - 80));
 
     ui_->m_pCheckBoxHeartbeat->setChecked(serverConfig().hasHeartbeat());
     ui_->m_pSpinBoxHeartbeat->setValue(serverConfig().heartbeat());

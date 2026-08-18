@@ -185,7 +185,7 @@ QRadioButton,
 QCheckBox {
     spacing: 10px;
     color: #dee4e3;
-    min-height: 40px;
+    min-height: 28px;
     background: transparent;
     border: none;
 }
@@ -327,6 +327,24 @@ QPushButton:focus {
     background: #171d1d;
     border: none;
     padding: 8px 8px;
+}
+
+#bodyScroll {
+    background: #0e1415;
+    border: none;
+}
+
+QScrollArea {
+    background: transparent;
+    border: none;
+}
+
+QDialogButtonBox {
+    min-height: 44px;
+}
+
+QDialogButtonBox QPushButton {
+    min-width: 88px;
 }
 
 #layoutPreview {

@@ -50,6 +50,8 @@
 #include <QRegularExpression>
 #include <QStyle>
 #include <QFile>
+#include <QScrollArea>
+#include <QSizePolicy>
 
 #if defined(Q_OS_MAC)
 #include <ApplicationServices/ApplicationServices.h>
@@ -148,6 +150,21 @@ MainWindow::MainWindow(QSettings& settings, AppConfig& appConfig) :
     setAttribute(Qt::WA_X11NetWmWindowTypeDialog, true);
 
     ui_->setupUi(this);
+    {
+        auto* scroll = new QScrollArea(ui_->centralwidget);
+        scroll->setObjectName(QStringLiteral("bodyScroll"));
+        scroll->setWidgetResizable(true);
+        scroll->setFrameShape(QFrame::NoFrame);
+        scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+        scroll->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+        scroll->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        ui_->verticalLayout_2->removeWidget(ui_->bodyWrap);
+        scroll->setWidget(ui_->bodyWrap);
+        ui_->verticalLayout_2->insertWidget(1, scroll);
+        ui_->verticalLayout_2->setStretch(1, 1);
+        ui_->headerBar->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+        ui_->footerBar->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    }
     setProperty("conn", "off");
     ui_->m_pStatusLabel->setProperty("conn", "off");
     ui_->m_pButtonToggleStart->setProperty("mode", "start");
@@ -202,11 +219,11 @@ MainWindow::MainWindow(QSettings& settings, AppConfig& appConfig) :
     });
 
 #if defined(Q_OS_WIN)
-    resize(920, 740);
-    setMinimumSize(880, 660);
+    setMinimumSize(720, 480);
+    resize(900, 640);
 #else
-    // resize window to smallest reasonable size
-    resize(0, 0);
+    setMinimumSize(700, 480);
+    resize(860, 600);
 #endif
     refreshLayoutPreview();
     initShareFolder();
@@ -1081,14 +1098,6 @@ void MainWindow::changeEvent(QEvent* event)
     }
     // all that do not return are allowing the event to propagate
     QMainWindow::changeEvent(event);
-}
-
-bool MainWindow::event(QEvent* event)
-{
-    if (event->type() == QEvent::LayoutRequest) {
-        setFixedSize(sizeHint());
-    }
-    return QMainWindow::event(event);
 }
 
 void MainWindow::updateZeroconfService()
