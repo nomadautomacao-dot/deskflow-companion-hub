@@ -60,6 +60,7 @@ class PeerDiscovery;
 class DataDownloader;
 class CommandProcess;
 class SslCertificate;
+class ShareFolderService;
 
 namespace Ui
 {
@@ -151,6 +152,7 @@ public slots:
         void changeEvent(QEvent* event) override;
         bool event(QEvent* event) override;
         void retranslateMenuBar();
+        void refreshLayoutPreview();
 #if defined(Q_OS_WIN)
         bool isServiceRunning(QString name);
 #else
@@ -165,6 +167,9 @@ public slots:
         void proofreadInfo();
         void windowStateChanged();
         void updateSSLFingerprint();
+        void initShareFolder();
+        void syncShareFolder();
+        void updateShareFolderPathLabel();
 
     private:
         std::unique_ptr<Ui::MainWindow> ui_;
@@ -195,6 +200,7 @@ public slots:
         SslCertificate* m_pSslCertificate;
         QStringList m_PendingClientNames;
         LogWindow *m_pLogWindow;
+        ShareFolderService* m_pShareFolder = nullptr;
 
         bool m_fingerprint_expanded = false;
 
@@ -204,6 +210,9 @@ private slots:
     void on_m_pCheckBoxAutoConfig_toggled(bool checked);
     void comboServerList_currentIndexChanged(QString );
     void on_m_pButtonReload_clicked();
+    void on_m_pButtonOpenShare_clicked();
+    void on_m_pButtonChooseShare_clicked();
+    void on_m_pButtonSendFile_clicked();
     void installBonjour();
 
 };

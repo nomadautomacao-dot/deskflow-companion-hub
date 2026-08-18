@@ -101,6 +101,11 @@ class AppConfig: public QObject
         void setMinimizeToTray(bool b);
         bool getMinimizeToTray();
 
+        QString shareFolderPath() const;
+        void setShareFolderPath(const QString& path);
+        bool shareFolderEnabled() const;
+        void setShareFolderEnabled(bool enabled);
+
         void saveSettings();
 
 protected:
@@ -137,6 +142,8 @@ protected:
         bool m_AutoHide;
         bool m_AutoStart;
         bool m_MinimizeToTray;
+        QString m_ShareFolderPath;
+        bool m_ShareFolderEnabled = true;
 
         static const char server_name_[];
         static const char client_name_[];

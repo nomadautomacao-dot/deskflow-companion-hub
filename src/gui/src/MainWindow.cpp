@@ -32,6 +32,7 @@
 #include "QUtility.h"
 #include "ProcessorArch.h"
 #include "SslCertificate.h"
+#include "ShareFolderService.h"
 #include "base/String.h"
 #include "common/DataDirectories.h"
 #include "net/FingerprintDatabase.h"
@@ -47,6 +48,8 @@
 #include <QFileDialog>
 #include <QDesktopServices>
 #include <QRegularExpression>
+#include <QStyle>
+#include <QFile>
 
 #if defined(Q_OS_MAC)
 #include <ApplicationServices/ApplicationServices.h>
@@ -145,6 +148,9 @@ MainWindow::MainWindow(QSettings& settings, AppConfig& appConfig) :
     setAttribute(Qt::WA_X11NetWmWindowTypeDialog, true);
 
     ui_->setupUi(this);
+    setProperty("conn", "off");
+    ui_->m_pStatusLabel->setProperty("conn", "off");
+    ui_->m_pButtonToggleStart->setProperty("mode", "start");
     setWindowIcon(QIcon(APP_LARGE_ICON));
     createMenuBar();
     loadSettings();
@@ -195,8 +201,15 @@ MainWindow::MainWindow(QSettings& settings, AppConfig& appConfig) :
         }
     });
 
+#if defined(Q_OS_WIN)
+    resize(920, 740);
+    setMinimumSize(880, 660);
+#else
     // resize window to smallest reasonable size
     resize(0, 0);
+#endif
+    refreshLayoutPreview();
+    initShareFolder();
 }
 
 MainWindow::~MainWindow()
@@ -213,6 +226,8 @@ MainWindow::~MainWindow()
     delete m_DownloadMessageBox;
     delete m_BonjourInstall;
     delete m_pSslCertificate;
+    delete m_pShareFolder;
+    m_pShareFolder = nullptr;
 
     // LogWindow is created as a sibling of the MainWindow rather than a child
     // so that the main window can be hidden without hiding the log. because of
@@ -903,6 +918,7 @@ void MainWindow::set_connection_state(AppConnectionState state)
         disconnect(ui_->m_pButtonToggleStart, &QPushButton::clicked, ui_->m_pActionStartCmdApp, &QAction::trigger);
         connect(ui_->m_pButtonToggleStart, &QPushButton::clicked, ui_->m_pActionStopCmdApp, &QAction::trigger);
         ui_->m_pButtonToggleStart->setText(tr("&Stop"));
+        ui_->m_pButtonToggleStart->setProperty("mode", "stop");
         ui_->m_pButtonReload->setEnabled(true);
     }
     else if (state == AppConnectionState::DISCONNECTED)
@@ -910,6 +926,7 @@ void MainWindow::set_connection_state(AppConnectionState state)
         disconnect(ui_->m_pButtonToggleStart, &QPushButton::clicked, ui_->m_pActionStopCmdApp, &QAction::trigger);
         connect(ui_->m_pButtonToggleStart, &QPushButton::clicked, ui_->m_pActionStartCmdApp, &QAction::trigger);
         ui_->m_pButtonToggleStart->setText(tr("&Start"));
+        ui_->m_pButtonToggleStart->setProperty("mode", "start");
         ui_->m_pButtonReload->setEnabled(false);
     }
 
@@ -952,6 +969,24 @@ void MainWindow::set_connection_state(AppConnectionState state)
     set_icon(state);
 
     connection_state_ = state;
+
+    const char* conn = "off";
+    if (state == AppConnectionState::CONNECTED || state == AppConnectionState::TRANSFERRING) {
+        conn = "live";
+    } else if (state == AppConnectionState::CONNECTING) {
+        conn = "arm";
+    }
+    setProperty("conn", conn);
+    ui_->m_pStatusLabel->setProperty("conn", conn);
+    ui_->m_pButtonToggleStart->style()->unpolish(ui_->m_pButtonToggleStart);
+    ui_->m_pButtonToggleStart->style()->polish(ui_->m_pButtonToggleStart);
+    ui_->m_pStatusLabel->style()->unpolish(ui_->m_pStatusLabel);
+    ui_->m_pStatusLabel->style()->polish(ui_->m_pStatusLabel);
+    style()->unpolish(this);
+    style()->polish(this);
+    update();
+
+    syncShareFolder();
 }
 
 void MainWindow::setVisible(bool visible)
@@ -1263,6 +1298,176 @@ void MainWindow::on_m_pButtonConfigureServer_clicked()
 void MainWindow::on_m_pButtonReload_clicked()
 {
     restart_cmd_app();
+    refreshLayoutPreview();
+}
+
+void MainWindow::initShareFolder()
+{
+    if (m_pShareFolder) {
+        return;
+    }
+
+    m_pShareFolder = new ShareFolderService(this);
+    m_pShareFolder->setFolder(appConfig().shareFolderPath());
+    updateShareFolderPathLabel();
+
+    connect(m_pShareFolder, &ShareFolderService::statusChanged, this, [this](const QString& text) {
+        if (ui_->m_pLabelShareStatus) {
+            ui_->m_pLabelShareStatus->setText(text);
+        }
+    });
+    connect(m_pShareFolder, &ShareFolderService::fileSent, this, [this](const QString& name) {
+        appendLogInfo(tr("Shared folder sent %1").arg(name));
+        if (m_pTrayIcon) {
+            m_pTrayIcon->showMessage(tr("InputLeap"), tr("Sent %1").arg(name));
+        }
+    });
+    connect(m_pShareFolder, &ShareFolderService::fileReceived, this, [this](const QString& name) {
+        appendLogInfo(tr("Shared folder received %1").arg(name));
+        if (m_pTrayIcon) {
+            m_pTrayIcon->showMessage(tr("InputLeap"), tr("Received %1 — saved in the shared folder").arg(name));
+        }
+    });
+    connect(m_pShareFolder, &ShareFolderService::errorOccurred, this, [this](const QString& text) {
+        appendLogError(text);
+        if (ui_->m_pLabelShareStatus) {
+            ui_->m_pLabelShareStatus->setText(text);
+        }
+    });
+}
+
+void MainWindow::syncShareFolder()
+{
+    if (!m_pShareFolder || !appConfig().shareFolderEnabled()) {
+        if (m_pShareFolder) {
+            m_pShareFolder->stop();
+        }
+        return;
+    }
+
+    m_pShareFolder->setFolder(appConfig().shareFolderPath());
+    updateShareFolderPathLabel();
+
+    const bool live = connection_state_ == AppConnectionState::CONNECTED ||
+                      connection_state_ == AppConnectionState::TRANSFERRING;
+    if (!live) {
+        m_pShareFolder->stop();
+        return;
+    }
+
+    const quint16 sharePort = static_cast<quint16>(appConfig().port() + 1);
+    if (app_role() == AppRole::Server) {
+        if (m_pShareFolder->role() != ShareFolderService::Role::Server) {
+            m_pShareFolder->startServer(sharePort);
+        }
+    } else {
+        const QString host = hostname().trimmed();
+        if (host.isEmpty()) {
+            m_pShareFolder->stop();
+            if (ui_->m_pLabelShareStatus) {
+                ui_->m_pLabelShareStatus->setText(tr("Set the server IP to link the shared folder."));
+            }
+            return;
+        }
+        if (m_pShareFolder->role() != ShareFolderService::Role::Client) {
+            m_pShareFolder->startClient(host, sharePort);
+        }
+    }
+}
+
+void MainWindow::updateShareFolderPathLabel()
+{
+    if (!ui_->m_pLabelSharePath) {
+        return;
+    }
+    const QString path = appConfig().shareFolderPath();
+    ui_->m_pLabelSharePath->setText(QDir::toNativeSeparators(path));
+    ui_->m_pLabelSharePath->setToolTip(path);
+}
+
+void MainWindow::on_m_pButtonOpenShare_clicked()
+{
+    if (!m_pShareFolder) {
+        initShareFolder();
+    }
+    m_pShareFolder->setFolder(appConfig().shareFolderPath());
+    updateShareFolderPathLabel();
+    QDesktopServices::openUrl(QUrl::fromLocalFile(appConfig().shareFolderPath()));
+}
+
+void MainWindow::on_m_pButtonChooseShare_clicked()
+{
+    const QString chosen = QFileDialog::getExistingDirectory(
+        this,
+        tr("Choose shared folder"),
+        appConfig().shareFolderPath());
+    if (chosen.isEmpty()) {
+        return;
+    }
+    appConfig().setShareFolderPath(chosen);
+    appConfig().saveSettings();
+    if (m_pShareFolder) {
+        m_pShareFolder->setFolder(chosen);
+    }
+    updateShareFolderPathLabel();
+    appendLogInfo(tr("Shared folder is now %1").arg(QDir::toNativeSeparators(chosen)));
+}
+
+void MainWindow::on_m_pButtonSendFile_clicked()
+{
+    if (!m_pShareFolder) {
+        initShareFolder();
+    }
+    m_pShareFolder->setFolder(appConfig().shareFolderPath());
+
+    const QString path = QFileDialog::getOpenFileName(
+        this,
+        tr("Send file to the other computer"),
+        QDir::homePath());
+    if (path.isEmpty()) {
+        return;
+    }
+    m_pShareFolder->sendExistingFile(path);
+}
+
+void MainWindow::refreshLayoutPreview()
+{
+    if (!ui_ || !ui_->m_pLayoutLeftChip || !ui_->m_pLayoutRightChip) {
+        return;
+    }
+
+    const QString self = getScreenName();
+    QString left = QStringLiteral("Mac");
+    QString right = self;
+
+    QString path = ui_->m_pLineEditConfigFile->text();
+    if (path.isEmpty()) {
+        path = configFilename();
+    }
+
+    QFile file(path);
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        const QString text = QString::fromUtf8(file.readAll());
+        const QRegularExpression left_re(
+            QStringLiteral("\\b%1:\\s*left\\s*=\\s*(\\S+)").arg(QRegularExpression::escape(self)));
+        const QRegularExpression right_re(
+            QStringLiteral("\\b%1:\\s*right\\s*=\\s*(\\S+)").arg(QRegularExpression::escape(self)));
+        const auto left_match = left_re.match(text);
+        const auto right_match = right_re.match(text);
+        if (left_match.hasMatch()) {
+            left = left_match.captured(1);
+            right = self;
+        } else if (right_match.hasMatch()) {
+            left = self;
+            right = right_match.captured(1);
+        }
+    }
+
+    ui_->m_pLayoutLeftChip->setText(left);
+    ui_->m_pLayoutRightChip->setText(right);
+    if (!path.isEmpty()) {
+        ui_->m_pLineEditConfigFile->setToolTip(path);
+    }
 }
 
 #if defined(Q_OS_WIN)

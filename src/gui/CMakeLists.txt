@@ -49,6 +49,7 @@ set(GUI_SOURCE_FILES
     src/ServerConfig.cpp
     src/ServerConfigDialog.cpp
     src/SettingsDialog.cpp
+    src/ShareFolderService.cpp
     src/SetupWizard.cpp
     src/SslCertificate.cpp
     src/TrashScreenWidget.cpp
@@ -90,6 +91,7 @@ set(GUI_HEADER_FILES
     src/ServerConfigDialog.h
     src/ServerConfig.h
     src/SettingsDialog.h
+    src/ShareFolderService.h
     src/SetupWizard.h
     src/SslCertificate.h
     src/TrashScreenWidget.h
@@ -208,9 +210,14 @@ target_compile_definitions (input-leap PRIVATE -DINPUTLEAP_VERSION_STAGE="${INPU
 target_compile_definitions (input-leap PRIVATE -DINPUTLEAP_REVISION="${INPUTLEAP_REVISION}")
 
 if (BUILD_MSWINDOWS)
-    include_directories ($ENV{BONJOUR_SDK_HOME}/Include)
+    if (DEFINED ENV{BONJOUR_SDK_HOME} AND EXISTS "$ENV{BONJOUR_SDK_HOME}/Include")
+        include_directories ($ENV{BONJOUR_SDK_HOME}/Include)
+    elseif (EXISTS "${CMAKE_SOURCE_DIR}/deps/BonjourSDKLike/Include")
+        include_directories ("${CMAKE_SOURCE_DIR}/deps/BonjourSDKLike/Include")
+    endif()
     find_library (DNSSD_LIB dnssd.lib
                   HINTS ENV BONJOUR_SDK_HOME
+                        "${CMAKE_SOURCE_DIR}/deps/BonjourSDKLike"
                   PATH_SUFFIXES "Lib/x64")
     set_target_properties (input-leap PROPERTIES LINK_FLAGS "/NODEFAULTLIB:LIBCMT")
     if (DNSSD_LIB)

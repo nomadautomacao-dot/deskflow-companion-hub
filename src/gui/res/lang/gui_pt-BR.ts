@@ -399,7 +399,7 @@ To automatically trust this fingerprint for future connections, click Yes. To re
     <message>
         <location filename="res/MainWindow.ui" line="90"/>
         <source>Ser&amp;ver (share this computer's mouse and keyboard):</source>
-        <translation type="unfinished"></translation>
+        <translation type="finished">Servidor (compartilhar mouse e teclado deste PC)</translation>
     </message>
     <message>
         <location filename="res/MainWindow.ui" line="243"/>
@@ -420,7 +420,7 @@ To automatically trust this fingerprint for future connections, click Yes. To re
     <message>
         <location filename="res/MainWindow.ui" line="181"/>
         <source>Use existing configuration:</source>
-        <translation type="finished">Usar a configuração existente:Use a configuração e</translation>
+        <translation type="finished">Usar configuração existente</translation>
     </message>
     <message>
         <location filename="res/MainWindow.ui" line="190"/>
@@ -463,6 +463,30 @@ To automatically trust this fingerprint for future connections, click Yes. To re
         <translation type="finished">Endereço ip:</translation>
     </message>
     <message>
+        <source>Shared folder</source>
+        <translation type="finished">Pasta compartilhada</translation>
+    </message>
+    <message>
+        <source>Copy a file into this folder to send it to the other computer. Both machines need this InputLeap build.</source>
+        <translation type="finished">Copie um arquivo nesta pasta para enviar ao outro computador. Os dois PCs precisam desta versão do InputLeap.</translation>
+    </message>
+    <message>
+        <source>Send file...</source>
+        <translation type="finished">Enviar arquivo...</translation>
+    </message>
+    <message>
+        <source>Open folder</source>
+        <translation type="finished">Abrir pasta</translation>
+    </message>
+    <message>
+        <source>Choose...</source>
+        <translation type="finished">Escolher...</translation>
+    </message>
+    <message>
+        <source>Start InputLeap to link the shared folder.</source>
+        <translation type="finished">Inicie o InputLeap para ligar a pasta compartilhada.</translation>
+    </message>
+    <message>
         <location filename="res/MainWindow.ui" line="131"/>
         <source>Fingerprint:</source>
         <translation type="unfinished"></translation>
@@ -470,12 +494,12 @@ To automatically trust this fingerprint for future connections, click Yes. To re
     <message>
         <location filename="res/MainWindow.ui" line="228"/>
         <source>&amp;Client (use another computer's mouse and keyboard):</source>
-        <translation type="unfinished"></translation>
+        <translation type="finished">Cliente (usar mouse e teclado de outro PC)</translation>
     </message>
     <message>
         <location filename="res/MainWindow.ui" line="270"/>
         <source>Auto config</source>
-        <translation type="unfinished"></translation>
+        <translation type="finished">Configuração automática</translation>
     </message>
     <message>
         <location filename="res/MainWindow.ui" line="390"/>
@@ -1425,6 +1449,105 @@ Server response:
     <message>
         <source>Peer client discovered via UDP: %1 (%2)</source>
         <translation type="finished">Cliente par detectado via UDP: %1 (%2)</translation>
+    </message>
+    <message>
+        <source>Shared folder sent %1</source>
+        <translation type="finished">Pasta compartilhada enviou %1</translation>
+    </message>
+    <message>
+        <source>Sent %1</source>
+        <translation type="finished">Enviado %1</translation>
+    </message>
+    <message>
+        <source>Shared folder received %1</source>
+        <translation type="finished">Pasta compartilhada recebeu %1</translation>
+    </message>
+    <message>
+        <source>Received %1 — saved in the shared folder</source>
+        <translation type="finished">Recebido %1 — salvo na pasta compartilhada</translation>
+    </message>
+    <message>
+        <source>Set the server IP to link the shared folder.</source>
+        <translation type="finished">Informe o IP do servidor para ligar a pasta compartilhada.</translation>
+    </message>
+    <message>
+        <source>Choose shared folder</source>
+        <translation type="finished">Escolher pasta compartilhada</translation>
+    </message>
+    <message>
+        <source>Shared folder is now %1</source>
+        <translation type="finished">A pasta compartilhada agora é %1</translation>
+    </message>
+    <message>
+        <source>Send file to the other computer</source>
+        <translation type="finished">Enviar arquivo para o outro computador</translation>
+    </message>
+</context>
+<context>
+    <name>ShareFolderService</name>
+    <message>
+        <source>Could not listen for shared-folder transfers on port %1: %2</source>
+        <translation type="finished">Não foi possível ouvir transferências da pasta na porta %1: %2</translation>
+    </message>
+    <message>
+        <source>That is not a file that can be sent.</source>
+        <translation type="finished">Isso não é um arquivo que possa ser enviado.</translation>
+    </message>
+    <message>
+        <source>The file name is not allowed.</source>
+        <translation type="finished">O nome do arquivo não é permitido.</translation>
+    </message>
+    <message>
+        <source>Could not copy %1 into the shared folder.</source>
+        <translation type="finished">Não foi possível copiar %1 para a pasta compartilhada.</translation>
+    </message>
+    <message>
+        <source>Sending %1…</source>
+        <translation type="finished">Enviando %1…</translation>
+    </message>
+    <message>
+        <source>Shared-folder connection closed (bad protocol).</source>
+        <translation type="finished">Conexão da pasta compartilhada encerrada (protocolo inválido).</translation>
+    </message>
+    <message>
+        <source>Shared-folder version mismatch. Install this InputLeap build on both computers.</source>
+        <translation type="finished">Versão da pasta compartilhada diferente. Instale esta versão do InputLeap nos dois computadores.</translation>
+    </message>
+    <message>
+        <source>Shared-folder connection closed (unknown message).</source>
+        <translation type="finished">Conexão da pasta compartilhada encerrada (mensagem desconhecida).</translation>
+    </message>
+    <message>
+        <source>Rejected incoming file.</source>
+        <translation type="finished">Arquivo recebido foi recusado.</translation>
+    </message>
+    <message>
+        <source>Could not write %1 into the shared folder.</source>
+        <translation type="finished">Não foi possível gravar %1 na pasta compartilhada.</translation>
+    </message>
+    <message>
+        <source>Receiving %1…</source>
+        <translation type="finished">Recebendo %1…</translation>
+    </message>
+    <message>
+        <source>Could not finish saving %1.</source>
+        <translation type="finished">Não foi possível concluir o salvamento de %1.</translation>
+    </message>
+    <message>
+        <source>Start InputLeap to link the shared folder.</source>
+        <translation type="finished">Inicie o InputLeap para ligar a pasta compartilhada.</translation>
+    </message>
+    <message>
+        <source>Linked — copy a file here to send it to the other computer.</source>
+        <translation type="finished">Conectada — copie um arquivo aqui para enviar ao outro computador.</translation>
+    </message>
+    <message>
+        <source>Connecting shared folder to %1…</source>
+        <translation type="finished">Conectando a pasta compartilhada a %1…</translation>
+    </message>
+    <message>
+        <source>Waiting for the other computer to open this InputLeap build.</source>
+        <translation type="finished">Aguardando o outro computador abrir esta versão do InputLeap.</translation>
     </message>
 </context>
 </TS>

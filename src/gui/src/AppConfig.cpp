@@ -18,6 +18,7 @@
 
 #include "AppConfig.h"
 #include "QUtility.h"
+#include "ShareFolderService.h"
 
 #include <QtCore>
 #include <QtNetwork>
@@ -163,6 +164,8 @@ void AppConfig::loadSettings()
     m_AutoHide = settings().value("autoHide", false).toBool();
     m_AutoStart = settings().value("autoStart", false).toBool();
     m_MinimizeToTray = settings().value("minimizeToTray", false).toBool();
+    m_ShareFolderPath = settings().value("shareFolderPath", ShareFolderService::defaultFolder()).toString();
+    m_ShareFolderEnabled = settings().value("shareFolderEnabled", true).toBool();
 }
 
 void AppConfig::saveSettings()
@@ -187,6 +190,8 @@ void AppConfig::saveSettings()
     settings().setValue("autoHide", m_AutoHide);
     settings().setValue("autoStart", m_AutoStart);
     settings().setValue("minimizeToTray", m_MinimizeToTray);
+    settings().setValue("shareFolderPath", m_ShareFolderPath);
+    settings().setValue("shareFolderEnabled", m_ShareFolderEnabled);
     settings().sync();
 }
 
@@ -243,3 +248,17 @@ bool AppConfig::getAutoStart() { return m_AutoStart; }
 void AppConfig::setMinimizeToTray(bool b) { m_MinimizeToTray = b; }
 
 bool AppConfig::getMinimizeToTray() { return m_MinimizeToTray; }
+
+QString AppConfig::shareFolderPath() const
+{
+    return m_ShareFolderPath.isEmpty() ? ShareFolderService::defaultFolder() : m_ShareFolderPath;
+}
+
+void AppConfig::setShareFolderPath(const QString& path)
+{
+    m_ShareFolderPath = path;
+}
+
+bool AppConfig::shareFolderEnabled() const { return m_ShareFolderEnabled; }
+
+void AppConfig::setShareFolderEnabled(bool enabled) { m_ShareFolderEnabled = enabled; }

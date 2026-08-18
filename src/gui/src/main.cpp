@@ -28,6 +28,10 @@
 #include <QtGui>
 #include <QSettings>
 #include <QMessageBox>
+#include <QFile>
+#include <QStyleFactory>
+#include <QPalette>
+#include <QColor>
 
 #if defined(Q_OS_MAC)
 #include <Carbon/Carbon.h>
@@ -87,6 +91,31 @@ int main(int argc, char* argv[])
     QCoreApplication::setApplicationName("InputLeap");
 
     QInputLeapApplication app(argc, argv);
+    if (QStyleFactory::keys().contains(QStringLiteral("Fusion"), Qt::CaseInsensitive)) {
+        app.setStyle(QStyleFactory::create(QStringLiteral("Fusion")));
+    }
+    {
+        QPalette pal = app.palette();
+        pal.setColor(QPalette::Window, QColor(QStringLiteral("#0e1415")));
+        pal.setColor(QPalette::WindowText, QColor(QStringLiteral("#dee4e3")));
+        pal.setColor(QPalette::Base, QColor(QStringLiteral("#303636")));
+        pal.setColor(QPalette::AlternateBase, QColor(QStringLiteral("#1b2121")));
+        pal.setColor(QPalette::Text, QColor(QStringLiteral("#dee4e3")));
+        pal.setColor(QPalette::Button, QColor(QStringLiteral("#303636")));
+        pal.setColor(QPalette::ButtonText, QColor(QStringLiteral("#4cdadb")));
+        pal.setColor(QPalette::Highlight, QColor(QStringLiteral("#4cdadb")));
+        pal.setColor(QPalette::HighlightedText, QColor(QStringLiteral("#003738")));
+        pal.setColor(QPalette::ToolTipBase, QColor(QStringLiteral("#303636")));
+        pal.setColor(QPalette::ToolTipText, QColor(QStringLiteral("#dee4e3")));
+        pal.setColor(QPalette::PlaceholderText, QColor(QStringLiteral("#889392")));
+        app.setPalette(pal);
+    }
+    {
+        QFile style_file(QStringLiteral(":/res/style/inputleap.qss"));
+        if (style_file.open(QFile::ReadOnly | QFile::Text)) {
+            app.setStyleSheet(QString::fromUtf8(style_file.readAll()));
+        }
+    }
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     app.setDesktopFileName(QStringLiteral("io.github.input_leap.input-leap"));
