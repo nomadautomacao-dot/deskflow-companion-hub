@@ -266,6 +266,11 @@ private:
     mutable std::int32_t m_xCursor, m_yCursor;
     mutable bool m_cursorPosValid;
 
+    // carry sub-line scroll remainders between fakeMouseWheel calls so
+    // high-resolution wheels (deltas < 120 per notch) are not truncated away
+    mutable double m_scrollRemainderX = 0.0;
+    mutable double m_scrollRemainderY = 0.0;
+
     /* FIXME: this data structure is explicitly marked mutable due
        to a need to track the state of buttons since the remote
        side only lets us know of change events, and because the

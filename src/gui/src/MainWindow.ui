@@ -107,7 +107,7 @@
        <item>
         <widget class="QLabel" name="m_pStatusLabel">
          <property name="text">
-          <string>Ready</string>
+          <string>Pronto</string>
          </property>
         </widget>
        </item>
@@ -159,7 +159,7 @@
        </sizepolicy>
       </property>
       <property name="title">
-       <string>Ser&amp;ver (share this computer's mouse and keyboard):</string>
+       <string>Ser&amp;vidor — compartilhar o teclado e o mouse deste computador</string>
       </property>
       <property name="checkable">
        <bool>true</bool>
@@ -176,7 +176,7 @@
          <item row="0" column="0">
           <widget class="QLabel" name="label_2">
            <property name="text">
-            <string>IP addresses:</string>
+            <string>Endereços IP:</string>
            </property>
           </widget>
          </item>
@@ -192,7 +192,7 @@
        <item>
         <widget class="QRadioButton" name="m_pRadioInternalConfig">
          <property name="text">
-          <string>Configure interactively:</string>
+          <string>Configurar interativamente:</string>
          </property>
          <property name="checked">
           <bool>true</bool>
@@ -204,7 +204,7 @@
          <item>
           <widget class="QPushButton" name="m_pButtonConfigureServer">
            <property name="text">
-            <string>&amp;Configure Server...</string>
+            <string>&amp;Configurar servidor…</string>
            </property>
           </widget>
          </item>
@@ -226,7 +226,7 @@
        <item>
         <widget class="QRadioButton" name="m_pRadioExternalConfig">
          <property name="text">
-          <string>Use existing configuration:</string>
+          <string>Usar configuração existente:</string>
          </property>
         </widget>
        </item>
@@ -238,7 +238,7 @@
          <item>
           <widget class="QLabel" name="m_pLabelConfigurationFile">
            <property name="text">
-            <string>&amp;Configuration file:</string>
+            <string>&amp;Arquivo de configuração:</string>
            </property>
            <property name="buddy">
             <cstring>m_pLineEditConfigFile</cstring>
@@ -266,7 +266,7 @@
             <bool>false</bool>
            </property>
            <property name="text">
-            <string>&amp;Browse...</string>
+            <string>&amp;Procurar…</string>
            </property>
           </widget>
          </item>
@@ -286,7 +286,7 @@
        </sizepolicy>
       </property>
       <property name="title">
-       <string>&amp;Client (use another computer's mouse and keyboard):</string>
+       <string>&amp;Cliente — usar o teclado e o mouse de outro computador</string>
       </property>
       <property name="checkable">
        <bool>true</bool>
@@ -301,7 +301,7 @@
        <item row="0" column="0">
         <widget class="QLabel" name="label_5">
          <property name="text">
-          <string>Screen name:</string>
+          <string>Nome da tela:</string>
          </property>
         </widget>
        </item>
@@ -315,7 +315,7 @@
        <item row="2" column="0">
         <widget class="QLabel" name="m_pLabelServerName">
          <property name="text">
-          <string>Server I&amp;P:</string>
+          <string>Servidor (I&amp;P ou nome):</string>
          </property>
          <property name="buddy">
           <cstring>m_pLineEditHostname</cstring>
@@ -328,7 +328,7 @@
        <item row="3" column="0">
         <widget class="QCheckBox" name="m_pCheckBoxAutoConfig">
          <property name="text">
-          <string>Auto config</string>
+          <string>Configuração automática</string>
          </property>
         </widget>
        </item>
@@ -447,7 +447,7 @@
     <item>
      <widget class="QGroupBox" name="m_pGroupShare">
       <property name="title">
-       <string>Shared folder</string>
+       <string>Pasta compartilhada</string>
       </property>
       <property name="checkable">
        <bool>false</bool>
@@ -459,7 +459,7 @@
        <item>
         <widget class="QLabel" name="m_pLabelShareHint">
          <property name="text">
-          <string>Copy a file into this folder to send it to the other computer. Both machines need this InputLeap build.</string>
+          <string>Copie um arquivo para esta pasta e ele será enviado ao outro computador. As duas máquinas precisam desta versão do InputLeap.</string>
          </property>
          <property name="wordWrap">
           <bool>true</bool>
@@ -481,21 +481,21 @@
          <item>
           <widget class="QPushButton" name="m_pButtonSendFile">
            <property name="text">
-            <string>Send file...</string>
+            <string>Enviar arquivo…</string>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QPushButton" name="m_pButtonOpenShare">
            <property name="text">
-            <string>Open folder</string>
+            <string>Abrir pasta</string>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QPushButton" name="m_pButtonChooseShare">
            <property name="text">
-            <string>Choose...</string>
+            <string>Escolher…</string>
            </property>
           </widget>
          </item>
@@ -517,7 +517,7 @@
        <item>
         <widget class="QLabel" name="m_pLabelShareStatus">
          <property name="text">
-          <string>Start InputLeap to link the shared folder.</string>
+          <string>Inicie o InputLeap para ativar a pasta compartilhada.</string>
          </property>
          <property name="wordWrap">
           <bool>true</bool>
@@ -538,7 +538,7 @@
          </sizepolicy>
         </property>
         <property name="text">
-         <string>SSL Fingerprint:</string>
+         <string>Impressão digital SSL:</string>
         </property>
        </widget>
       </item>
@@ -594,7 +594,7 @@
        <item row="2" column="0" colspan="2">
         <widget class="QLabel" name="label_sha1">
          <property name="text">
-          <string>SHA1 (deprecated, compare to old clients and servers only):</string>
+          <string>SHA1 (obsoleto — compare apenas com versões antigas):</string>
          </property>
         </widget>
        </item>
@@ -668,14 +668,14 @@
          <bool>false</bool>
         </property>
         <property name="text">
-         <string>&amp;Reload</string>
+         <string>&amp;Recarregar</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QPushButton" name="m_pButtonToggleStart">
         <property name="text">
-         <string>&amp;Start</string>
+         <string>&amp;Iniciar</string>
         </property>
        </widget>
       </item>
@@ -686,7 +686,7 @@
   </widget>
   <action name="m_pActionAbout">
    <property name="text">
-    <string>&amp;About InputLeap...</string>
+    <string>&amp;Sobre o InputLeap…</string>
    </property>
    <property name="shortcut">
     <string notr="true"/>
@@ -697,10 +697,10 @@
   </action>
   <action name="m_pActionQuit">
    <property name="text">
-    <string>&amp;Quit</string>
+    <string>&amp;Sair</string>
    </property>
    <property name="statusTip">
-    <string>Quit</string>
+    <string>Sair</string>
    </property>
    <property name="shortcut">
     <string notr="true">Ctrl+Q</string>
@@ -711,10 +711,10 @@
   </action>
   <action name="m_pActionStartCmdApp">
    <property name="text">
-    <string>&amp;Start</string>
+    <string>&amp;Iniciar</string>
    </property>
    <property name="statusTip">
-    <string>Run</string>
+    <string>Executar</string>
    </property>
    <property name="shortcut">
     <string notr="true">Ctrl+S</string>
@@ -725,10 +725,10 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>S&amp;top</string>
+    <string>&amp;Parar</string>
    </property>
    <property name="statusTip">
-    <string>Stop</string>
+    <string>Parar</string>
    </property>
    <property name="shortcut">
     <string notr="true">Ctrl+T</string>
@@ -736,10 +736,10 @@
   </action>
   <action name="m_pActionMinimize">
    <property name="text">
-    <string>&amp;Hide</string>
+    <string>&amp;Ocultar</string>
    </property>
    <property name="toolTip">
-    <string>Hide</string>
+    <string>Ocultar</string>
    </property>
    <property name="shortcut">
     <string notr="true">F5</string>
@@ -747,10 +747,10 @@
   </action>
   <action name="m_pActionRestore">
    <property name="text">
-    <string>&amp;Show</string>
+    <string>&amp;Mostrar</string>
    </property>
    <property name="toolTip">
-    <string>Show</string>
+    <string>Mostrar</string>
    </property>
    <property name="shortcut">
     <string notr="true"/>
@@ -758,10 +758,10 @@
   </action>
   <action name="m_pActionSave">
    <property name="text">
-    <string>S&amp;ave configuration</string>
+    <string>S&amp;alvar configuração</string>
    </property>
    <property name="statusTip">
-    <string>Save the interactively generated server configuration to a file.</string>
+    <string>Salvar a configuração gerada interativamente em um arquivo.</string>
    </property>
    <property name="shortcut">
     <string notr="true">Ctrl+Alt+S</string>
@@ -769,10 +769,10 @@
   </action>
   <action name="m_pActionSettings">
    <property name="text">
-    <string>Change &amp;Settings</string>
+    <string>&amp;Preferências</string>
    </property>
    <property name="statusTip">
-    <string>Edit settings</string>
+    <string>Editar preferências</string>
    </property>
    <property name="shortcut">
     <string notr="true">F4</string>
@@ -783,10 +783,10 @@
   </action>
   <action name="m_pActionShowLog">
    <property name="text">
-    <string>Show &amp;Log</string>
+    <string>Mostrar &amp;registro</string>
    </property>
    <property name="toolTip">
-    <string>Show Log</string>
+    <string>Mostrar registro</string>
    </property>
    <property name="shortcut">
     <string notr="true">F2</string>
@@ -794,10 +794,10 @@
   </action>
   <action name="m_pActionReload">
    <property name="text">
-    <string>&amp;Reload</string>
+    <string>&amp;Recarregar</string>
    </property>
    <property name="toolTip">
-    <string>Reload app</string>
+    <string>Recarregar o aplicativo</string>
    </property>
    <property name="shortcut">
     <string notr="true"/>

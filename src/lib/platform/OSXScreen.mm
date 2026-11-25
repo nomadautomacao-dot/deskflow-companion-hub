@@ -639,12 +639,22 @@ void OSXScreen::fakeMouseRelativeMove(std::int32_t dx, std::int32_t dy) const
 void OSXScreen::fakeMouseWheel(std::int32_t xDelta, std::int32_t yDelta) const
 {
 	if (xDelta != 0 || yDelta != 0) {
-		// create a scroll event, post it and release it.  not sure if kCGScrollEventUnitLine
-		// is the right choice here over kCGScrollEventUnitPixel
+		// scroll in pixel units, carrying sub-pixel remainders across calls;
+		// line units with integer conversion drop deltas below 40 (one line),
+		// which silenced high-resolution wheels and touchpads entirely
+		const double pixelsPerNotch = 30.0;
+		m_scrollRemainderY += yDelta * pixelsPerNotch / 120.0;
+		m_scrollRemainderX += -xDelta * pixelsPerNotch / 120.0;
+		std::int32_t pixelsY = static_cast<std::int32_t>(m_scrollRemainderY);
+		std::int32_t pixelsX = static_cast<std::int32_t>(m_scrollRemainderX);
+		if (pixelsY == 0 && pixelsX == 0) {
+			return;
+		}
+		m_scrollRemainderY -= pixelsY;
+		m_scrollRemainderX -= pixelsX;
+
 		CGEventRef scrollEvent = CGEventCreateScrollWheelEvent(
-            nullptr, kCGScrollEventUnitLine, 2,
-            map_scroll_wheel_to_osx(yDelta),
-            -map_scroll_wheel_to_osx(xDelta));
+            nullptr, kCGScrollEventUnitPixel, 2, pixelsY, pixelsX);
 
         // Fix for sticky keys
         CGEventFlags modifiers = m_keyState->getModifierStateAsOSXFlags();

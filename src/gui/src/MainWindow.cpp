@@ -296,10 +296,10 @@ void MainWindow::retranslateMenuBar()
 {
 #ifndef Q_OS_DARWIN
     main_menu_->setTitle(tr("&InputLeap"));
-    m_pMenuHelp->setTitle(tr("&Help"));
+    m_pMenuHelp->setTitle(tr("Aj&uda"));
 #else
-    m_pMenuHelp->setTitle(tr("&File"));
-    main_menu_->setTitle(tr("&Window"));
+    m_pMenuHelp->setTitle(tr("&Arquivo"));
+    main_menu_->setTitle(tr("&Janela"));
 #endif
 
 }
@@ -484,9 +484,8 @@ void MainWindow::checkConnected(const QString& line)
         if (!appConfig().startedBefore() && isVisible()) {
                 QMessageBox::information(
                     this, "InputLeap",
-                    tr("InputLeap is now connected. You can close the "
-                    "config window and InputLeap will remain connected in "
-                    "the background."));
+                    tr("O InputLeap está conectado. Você pode fechar esta janela — "
+                    "a conexão continua ativa em segundo plano."));
 
             appConfig().setStartedBefore(true);
             appConfig().saveSettings();
@@ -728,8 +727,8 @@ bool MainWindow::clientArgs(QStringList& args, QString& app)
     } else if (ui_->m_pLineEditHostname->text().isEmpty()) {
         show();
         if (!m_SuppressEmptyServerWarning) {
-            QMessageBox::warning(this, tr("Hostname is empty"),
-                             tr("Please fill in a hostname for the InputLeap client to connect to."));
+            QMessageBox::warning(this, tr("Servidor não informado"),
+                             tr("Informe o endereço do servidor para o cliente se conectar."));
         }
         return false;
     }
@@ -917,7 +916,7 @@ void MainWindow::set_connection_state(AppConnectionState state)
     {
         disconnect(ui_->m_pButtonToggleStart, &QPushButton::clicked, ui_->m_pActionStartCmdApp, &QAction::trigger);
         connect(ui_->m_pButtonToggleStart, &QPushButton::clicked, ui_->m_pActionStopCmdApp, &QAction::trigger);
-        ui_->m_pButtonToggleStart->setText(tr("&Stop"));
+        ui_->m_pButtonToggleStart->setText(tr("&Parar"));
         ui_->m_pButtonToggleStart->setProperty("mode", "stop");
         ui_->m_pButtonReload->setEnabled(true);
     }
@@ -925,7 +924,7 @@ void MainWindow::set_connection_state(AppConnectionState state)
     {
         disconnect(ui_->m_pButtonToggleStart, &QPushButton::clicked, ui_->m_pActionStopCmdApp, &QAction::trigger);
         connect(ui_->m_pButtonToggleStart, &QPushButton::clicked, ui_->m_pActionStartCmdApp, &QAction::trigger);
-        ui_->m_pButtonToggleStart->setText(tr("&Start"));
+        ui_->m_pButtonToggleStart->setText(tr("&Iniciar"));
         ui_->m_pButtonToggleStart->setProperty("mode", "start");
         ui_->m_pButtonReload->setEnabled(false);
     }
@@ -948,17 +947,17 @@ void MainWindow::set_connection_state(AppConnectionState state)
             ui_->m_pLabelPadlock->hide();
         }
 
-        setStatus(tr("InputLeap is running."));
+        setStatus(tr("Conectado"));
 
         break;
     }
     case AppConnectionState::CONNECTING:
         ui_->m_pLabelPadlock->hide();
-        setStatus(tr("InputLeap is starting."));
+        setStatus(tr("Conectando…"));
         break;
     case AppConnectionState::DISCONNECTED:
         ui_->m_pLabelPadlock->hide();
-        setStatus(tr("InputLeap is not running."));
+        setStatus(tr("Parado"));
         break;
     case AppConnectionState::TRANSFERRING:
         break;
@@ -1317,15 +1316,15 @@ void MainWindow::initShareFolder()
         }
     });
     connect(m_pShareFolder, &ShareFolderService::fileSent, this, [this](const QString& name) {
-        appendLogInfo(tr("Shared folder sent %1").arg(name));
+        appendLogInfo(tr("Pasta compartilhada: enviado %1").arg(name));
         if (m_pTrayIcon) {
-            m_pTrayIcon->showMessage(tr("InputLeap"), tr("Sent %1").arg(name));
+            m_pTrayIcon->showMessage(tr("InputLeap"), tr("Enviado: %1").arg(name));
         }
     });
     connect(m_pShareFolder, &ShareFolderService::fileReceived, this, [this](const QString& name) {
-        appendLogInfo(tr("Shared folder received %1").arg(name));
+        appendLogInfo(tr("Pasta compartilhada: recebido %1").arg(name));
         if (m_pTrayIcon) {
-            m_pTrayIcon->showMessage(tr("InputLeap"), tr("Received %1 — saved in the shared folder").arg(name));
+            m_pTrayIcon->showMessage(tr("InputLeap"), tr("Recebido: %1 — salvo na pasta compartilhada").arg(name));
         }
     });
     connect(m_pShareFolder, &ShareFolderService::errorOccurred, this, [this](const QString& text) {
@@ -1365,7 +1364,7 @@ void MainWindow::syncShareFolder()
         if (host.isEmpty()) {
             m_pShareFolder->stop();
             if (ui_->m_pLabelShareStatus) {
-                ui_->m_pLabelShareStatus->setText(tr("Set the server IP to link the shared folder."));
+                ui_->m_pLabelShareStatus->setText(tr("Defina o servidor para ativar a pasta compartilhada."));
             }
             return;
         }
@@ -1399,7 +1398,7 @@ void MainWindow::on_m_pButtonChooseShare_clicked()
 {
     const QString chosen = QFileDialog::getExistingDirectory(
         this,
-        tr("Choose shared folder"),
+        tr("Escolher pasta compartilhada"),
         appConfig().shareFolderPath());
     if (chosen.isEmpty()) {
         return;
@@ -1410,7 +1409,7 @@ void MainWindow::on_m_pButtonChooseShare_clicked()
         m_pShareFolder->setFolder(chosen);
     }
     updateShareFolderPathLabel();
-    appendLogInfo(tr("Shared folder is now %1").arg(QDir::toNativeSeparators(chosen)));
+    appendLogInfo(tr("Pasta compartilhada agora é %1").arg(QDir::toNativeSeparators(chosen)));
 }
 
 void MainWindow::on_m_pButtonSendFile_clicked()
@@ -1422,7 +1421,7 @@ void MainWindow::on_m_pButtonSendFile_clicked()
 
     const QString path = QFileDialog::getOpenFileName(
         this,
-        tr("Send file to the other computer"),
+        tr("Enviar arquivo para o outro computador"),
         QDir::homePath());
     if (path.isEmpty()) {
         return;
